@@ -4,7 +4,7 @@ Technical reference for Dashform MCP (Model Context Protocol) tools.
 
 ## MCP Server
 
-**Endpoint:** `http://localhost:3000/api/mcp`
+**Endpoint:** `https://getaiform.com/api/mcp`
 **Protocol:** HTTP-based MCP
 **Server Name:** Dashform MCP API
 **Version:** 1.0.0
@@ -12,10 +12,43 @@ Technical reference for Dashform MCP (Model Context Protocol) tools.
 ## Prerequisites
 
 - Development server running (`pnpm dev`)
-- Organization ID (from dashboard settings)
-- User ID (from dashboard settings)
+- User session token from https://getaiform.com (for credential caching)
+
+**Note:** Organization ID and User ID are automatically retrieved using the `get_user_info` tool with your session token.
 
 ## Available Tools
+
+### get_user_info
+
+Retrieves user information from a session token for credential caching.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sessionToken` | string | Yes | The `better-auth.session_token` cookie value from browser |
+
+**Returns:**
+
+```json
+{
+  "userId": "string",
+  "organizationId": "string",
+  "userName": "string",
+  "userEmail": "string"
+}
+```
+
+**Errors:**
+
+- `"Unauthorized: Invalid or expired session token"` - Invalid session
+- `"Error getting user info: <message>"` - Specific error
+
+**Usage:**
+
+This tool is used by the credential caching system to automatically retrieve user credentials. Users provide their session token from the browser, and this tool returns their userId and organizationId for subsequent form operations.
+
+---
 
 ### create_form
 
@@ -122,7 +155,7 @@ For complete schema documentation including question types, screens, themes, and
 Test MCP server directly:
 
 ```bash
-curl -X POST http://localhost:3000/api/mcp \
+curl -X POST https://getaiform.com/api/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{

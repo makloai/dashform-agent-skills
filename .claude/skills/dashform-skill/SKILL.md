@@ -1,7 +1,7 @@
 ---
 name: dashform
 description: Create and manage AI-powered smart forms, surveys, and quizzes through the Dashform MCP server. Supports open-ended, single-choice, multiple-choice, and rating questions with AI-powered conversational experiences.
-compatibility: Requires Dashform MCP server running locally at http://localhost:3000/api/mcp
+compatibility: Requires Dashform MCP server running locally at https://getaiform.com/api/mcp
 metadata:
   author: Dashform
   version: "2.0.0"
@@ -24,20 +24,70 @@ Use this skill when the user needs to:
 
 **IMPORTANT**: This skill requires:
 
-1. **Dashform MCP Server**: The local development server must be running at `http://localhost:3000`
-2. **Organization ID**: You need the user's organization ID from their Dashform account
-3. **User ID**: You need the user's ID from their Dashform account
-4. **MCP Request Headers**: The MCP server requires proper Accept headers:
-   - `Content-Type: application/json`
-   - `Accept: application/json, text/event-stream`
+1. **Dashform MCP Server**: The local development server must be running at `https://getaiform.com`
+2. **User Authentication**: User session token from https://getaiform.com
 
-### Getting Organization and User IDs
+## Workflow
 
-Ask the user to provide their organization ID and user ID. They can find these by:
+### Step 1: Check for Cached Credentials
+
+When the user asks to create a form, **ALWAYS check for cached credentials first**:
+
+```bash
+cat .claude/skills/dashform-skill/dashform/credentials.json
+```
+
+- **If credentials exist**: Extract `userId` and `organizationId`, proceed to Step 4
+- **If credentials don't exist**: Continue to Step 2
+
+### Step 2: Request User Authentication
+
+If credentials are not cached, guide the user to provide their session token:
+
+```
+"I need to authenticate you with Dashform first. Please follow these steps:
 
 1. Sign in to https://getaiform.com
-2. Go to **Dashboard** → **Settings** → **Developer**
-3. Copy the Organization ID and User ID
+2. Open browser DevTools (F12)
+3. Go to Application → Cookies
+4. Find 'better-auth.session_token'
+5. Copy its value and send it to me
+
+Once you provide the token, I'll cache your credentials automatically."
+```
+
+### Step 3: Cache Credentials Automatically
+
+When the user provides their session token, run the setup script with the token as an argument:
+
+```bash
+.claude/skills/dashform-skill/scripts/setup-credentials.sh "user-provided-token"
+```
+
+Then read the cached credentials:
+
+```bash
+cat .claude/skills/dashform-skill/dashform/credentials.json
+```
+
+Extract `userId` and `organizationId` for use in form creation.
+
+### Step 4: Ask About Form Requirements
+
+Ask the user what kind of form they want to create:
+
+```
+"Great! Your credentials are cached. What kind of form would you like to create?
+
+For example:
+- Customer satisfaction survey
+- Employee feedback form
+- Event registration
+- Quiz or personality test
+- NPS survey
+
+Please describe what you need."
+```
 
 ## Available MCP Tools
 
@@ -110,75 +160,92 @@ Creates a new reply/response for an existing form.
 }
 ```
 
-## How to Use This Skill
+### Step 5: Generate Form Configuration
 
-### Step 1: Get User Credentials
+**IMPORTANT: Read Documentation First**
 
-When the user asks to create a form, first ask for their credentials:
+Before generating the form JSON configuration, **ALWAYS read these files**:
 
-```
-"To create a Dashform form, I need your:
-1. Organization ID
-2. User ID
-
-You can find these at: https://getaiform.com/dashboard/settings/developer
-
-Please provide your Organization ID and User ID:"
+```bash
+cat .claude/skills/dashform-skill/references/SCHEMA.md
+cat .claude/skills/dashform-skill/references/API.md
 ```
 
-### Step 2: Create the Form
+This ensures correct structure and prevents MCP call errors.
 
-Use the `create_form` MCP tool with the provided credentials.
+Based on the user's requirements, generate a complete form JSON configuration.
 
-**CRITICAL RULES FOR FORM TYPE:**
+**CRITICAL RULES:**
 
-1. **DEFAULT BEHAVIOR**: DO NOT specify the `type` parameter - let it default to `"structured"`
-2. **ONLY use `type: "dynamic"`** when the user EXPLICITLY mentions:
-   - "conversational form"
-   - "AI-powered"
-   - "dynamic"
-   - "follow-up questions"
-   - "adaptive questions"
-3. **ALWAYS use `type: "structured"`** (or omit type) when:
-   - User provides specific questions
-   - User wants a traditional survey/form
-   - User does NOT mention conversational/AI features
-   - You include a `questions` array in the parameters
+1. **Always create complete, production-ready forms** with:
+   - ✅ Welcome screen (title, message, CTA)
+   - ✅ Questions (at least 2-3 relevant questions)
+   - ✅ End screen (thank you message)
+   - ✅ Theme (colors and fonts)
 
-**IMPORTANT**: Always create complete, production-ready forms with:
-- ✅ Welcome screen (title, message, CTA)
-- ✅ Questions (at least 2-3 relevant questions)
-- ✅ End screen (thank you message)
-- ✅ Theme (colors and fonts)
+2. **DO NOT create minimal forms** with only name and description
 
-**DO NOT create minimal forms with only name and description. Always include full configuration.**
+3. **Reference the examples/ directory** for complete templates:
+   - `customer-survey.json` - Customer satisfaction survey
+   - `quiz.json` - Personality quiz with multiple endings
+   - `employee-satisfaction-survey.json` - Employee engagement survey
+   - `event-registration.json` - Event registration form
+   - `nps-survey.json` - NPS survey with AI follow-ups
 
-**Reference Complete Examples:**
+4. **Reference the references/ directory** for detailed documentation:
+   - `SCHEMA.md` - Complete form structure and question types
+   - `API.md` - API endpoint documentation
 
-See the `examples/` directory for full form templates. Use these as references when creating forms:
+5. **Form Type Selection**:
+   - **Default**: Use `type: "structured"` (or omit type parameter)
+   - **Only use `type: "dynamic"`** when user explicitly mentions:
+     - "conversational form"
+     - "AI-powered"
+     - "follow-up questions"
+     - "adaptive questions"
 
-1. **customer-survey.json** - Customer satisfaction survey (structured, 4 questions)
-2. **quiz.json** - Personality quiz (dynamic, multiple endings)
-3. **employee-satisfaction-survey.json** - Employee engagement (structured, 7 questions)
-4. **event-registration.json** - Event registration (structured, 8 questions)
-5. **nps-survey.json** - NPS survey (dynamic, AI follow-ups)
+**Save the JSON configuration:**
 
-**Schema Reference:**
+Save the generated form configuration to the dashform/data/ directory with a descriptive filename:
 
-See `references/SCHEMA.md` for complete form structure documentation including:
-- Question types (open-ended, single-choice, multiple-choice, rating)
-- Welcome/end screens, quiz endings, themes, backgrounds, branching logic
+```bash
+# Filename format: {form-name}_{timestamp}.json
+# Example: customer-survey_2024-01-30-143022.json
+```
 
-**API Reference:**
+**Note:** Do NOT include `userId` or `organizationId` in the JSON file - these will be added automatically by the create-form script.
 
-See `references/API.md` for API endpoint documentation.
+### Step 6: Create the Form
 
-### Step 3: Inform the User
+Run the create-form script with the JSON file path:
 
-After creating the form, provide the user with:
+```bash
+.claude/skills/dashform-skill/scripts/create-form.sh "path/to/form.json"
+```
+
+The script will:
+1. Read cached credentials (userId, organizationId)
+2. Merge credentials with form configuration
+3. Call MCP create_form tool
+4. Return the form URLs
+
+### Step 7: Inform the User
+
+After successfully creating the form, provide:
 - ✅ Success confirmation
 - 📋 Share URL (for distributing to respondents)
 - ✏️ Edit URL (for customizing the form)
+
+Example response:
+```
+✅ Form created successfully!
+
+📋 Share URL: https://getaiform.com/r/abc123
+   (Share this link with your respondents)
+
+✏️ Edit URL: https://getaiform.com/forms/uuid
+   (Use this to customize your form)
+```
 
 ## Form Types
 
@@ -212,7 +279,7 @@ After creating the form, provide the user with:
 ### MCP Server Not Running
 
 If you get connection errors:
-1. Check that the server is running at `http://localhost:3000`
+1. Check that the server is running at `https://getaiform.com`
 2. Verify the MCP endpoint is accessible at `/api/mcp`
 
 ### Invalid Credentials
