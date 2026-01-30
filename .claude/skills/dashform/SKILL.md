@@ -34,7 +34,7 @@ Use this skill when the user needs to:
 When the user asks to create a form, **ALWAYS check for cached credentials first**:
 
 ```bash
-cat .claude/skills/dashform-skill/dashform/credentials.json
+cat .claude/skills/dashform/credentials.json
 ```
 
 - **If credentials exist**: Extract `userId`, `organizationId`, and `userName`, proceed to Step 4
@@ -61,13 +61,13 @@ Once you provide the token, I'll cache your credentials automatically."
 When the user provides their session token, run the setup script with the token as an argument:
 
 ```bash
-.claude/skills/dashform-skill/scripts/setup-credentials.sh "user-provided-token"
+.claude/skills/dashform/scripts/setup-credentials.sh "user-provided-token"
 ```
 
 Then read the cached credentials:
 
 ```bash
-cat .claude/skills/dashform-skill/dashform/credentials.json
+cat .claude/skills/dashform/credentials.json
 ```
 
 Extract `userId`, `organizationId`, and `userName` for use in form creation.
@@ -167,8 +167,8 @@ Creates a new reply/response for an existing form.
 Before generating the form JSON configuration, **ALWAYS read these files**:
 
 ```bash
-cat .claude/skills/dashform-skill/references/SCHEMA.md
-cat .claude/skills/dashform-skill/references/API.md
+cat .claude/skills/dashform/references/SCHEMA.md
+cat .claude/skills/dashform/references/API.md
 ```
 
 This ensures correct structure and prevents MCP call errors.
@@ -206,7 +206,7 @@ Based on the user's requirements, generate a complete form JSON configuration.
 
 **Save the JSON configuration:**
 
-Save the generated form configuration to the dashform/data/ directory with a descriptive filename:
+Save the generated form configuration to the data/ directory with a descriptive filename:
 
 ```bash
 # Filename format: {form-name}_{timestamp}.json
@@ -220,7 +220,7 @@ Save the generated form configuration to the dashform/data/ directory with a des
 Run the create-form script with the JSON file path:
 
 ```bash
-.claude/skills/dashform-skill/scripts/create-form.sh "path/to/form.json"
+.claude/skills/dashform/scripts/create-form.sh "path/to/form.json"
 ```
 
 The script will:

@@ -4,7 +4,7 @@
 # Reads form JSON data and calls MCP to create the form
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CREDENTIALS_FILE="$SCRIPT_DIR/../dashform/credentials.json"
+CREDENTIALS_FILE="$SCRIPT_DIR/../credentials.json"
 MCP_URL="https://getaiform.com/api/mcp"
 
 # Check if JSON file path is provided

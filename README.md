@@ -81,7 +81,7 @@ Check server is running at `https://getaiform.com` and verify `mcp.json` configu
 ### Authentication Issues
 Delete cached credentials and re-authenticate with a fresh session token:
 ```bash
-rm .claude/skills/dashform-skill/dashform/credentials.json
+rm .claude/skills/dashform/credentials.json
 ```
 
 ### Form Creation Fails

@@ -4,7 +4,7 @@
 # This script uses the MCP get_user_info tool to cache credentials
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CREDENTIALS_FILE="$SCRIPT_DIR/../dashform/credentials.json"
+CREDENTIALS_FILE="$SCRIPT_DIR/../credentials.json"
 MCP_URL="https://getaiform.com/api/mcp"
 
 echo "Dashform Credentials Setup..."
