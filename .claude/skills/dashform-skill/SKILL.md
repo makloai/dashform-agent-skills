@@ -37,7 +37,7 @@ When the user asks to create a form, **ALWAYS check for cached credentials first
 cat .claude/skills/dashform-skill/dashform/credentials.json
 ```
 
-- **If credentials exist**: Extract `userId` and `organizationId`, proceed to Step 4
+- **If credentials exist**: Extract `userId`, `organizationId`, and `userName`, proceed to Step 4
 - **If credentials don't exist**: Continue to Step 2
 
 ### Step 2: Request User Authentication
@@ -70,14 +70,14 @@ Then read the cached credentials:
 cat .claude/skills/dashform-skill/dashform/credentials.json
 ```
 
-Extract `userId` and `organizationId` for use in form creation.
+Extract `userId`, `organizationId`, and `userName` for use in form creation.
 
 ### Step 4: Ask About Form Requirements
 
-Ask the user what kind of form they want to create:
+Ask the user what kind of form they want to create, addressing them by their userName:
 
 ```
-"Great! Your credentials are cached. What kind of form would you like to create?
+"Great, {userName}! Your credentials are cached. What kind of form would you like to create?
 
 For example:
 - Customer satisfaction survey

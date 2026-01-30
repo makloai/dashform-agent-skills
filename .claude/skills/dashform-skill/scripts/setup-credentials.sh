@@ -54,13 +54,15 @@ if [ -z "$RESPONSE" ]; then
     exit 1
 fi
 
-# Extract userId and organizationId directly from response (UUID format)
+# Extract all user information from response
 USER_ID=$(echo "$RESPONSE" | grep -o 'userId[^a-f0-9-]*[a-f0-9-]\{36\}' | grep -o '[a-f0-9-]\{36\}' | head -1)
 ORG_ID=$(echo "$RESPONSE" | grep -o 'organizationId[^a-f0-9-]*[a-f0-9-]\{36\}' | grep -o '[a-f0-9-]\{36\}' | head -1)
+USER_NAME=$(echo "$RESPONSE" | grep -o '"userName":"[^"]*"' | cut -d'"' -f4)
+USER_EMAIL=$(echo "$RESPONSE" | grep -o '"userEmail":"[^"]*"' | cut -d'"' -f4)
 
 if [ -z "$USER_ID" ] || [ -z "$ORG_ID" ]; then
     echo "Error: Could not extract user information"
-    echo "Result: $RESULT"
+    echo "Response: $RESPONSE"
     exit 1
 fi
 
@@ -70,6 +72,8 @@ cat > "$CREDENTIALS_FILE" << JSON
 {
   "userId": "$USER_ID",
   "organizationId": "$ORG_ID",
+  "userName": "$USER_NAME",
+  "userEmail": "$USER_EMAIL",
   "cachedAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 }
 JSON
@@ -77,6 +81,7 @@ JSON
 echo ""
 echo "Credentials saved successfully!"
 echo ""
+echo "User: $USER_NAME ($USER_EMAIL)"
 echo "User ID: $USER_ID"
 echo "Organization ID: $ORG_ID"
 echo ""
